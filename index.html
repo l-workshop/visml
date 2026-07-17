@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="theme-color" content="#111318" />
+  <meta name="description" content="A web-based IDE for the Visual SML block language." />
+  <meta name="keywords" content="visual programming language, SML, Blockly" />
+  <meta name="author" content="S. Lolong" />
+  <title>Visual SML (ViSML)</title>
+  <link rel="icon" href="./favicon.ico" sizes="any" />
+  <style>
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #111318; }
+  </style>
+</head>
+
+<body>
+  <div id="app" class="app-shell" data-theme="dark">
+    <header class="topbar" id="navBar" data-ide-region="application-header" aria-label="Application header">
+      <div class="titlebar">
+        <a class="brand" href="#" aria-label="Visual SML home">
+          <img src="./images/logo_small.png" alt="" />
+          <span class="brand-name">Visual SML</span>
+        </a>
+
+        <nav id="appMenu" class="menu-system" aria-label="Application menu">
+          <div class="menu-root">
+            <button class="menu-button" type="button" data-menu-target="fileMenu" aria-haspopup="menu" aria-expanded="false">File</button>
+            <div id="fileMenu" class="app-menu" role="menu" hidden>
+              <button id="newWorkspace" type="button" role="menuitem" data-command="file.new"><span>New Workspace</span></button>
+              <button id="loadWorkspace" type="button" role="menuitem" data-command="file.open"><span>Open Workspace…</span><kbd>Ctrl+O</kbd></button>
+              <button id="saveWorkspace" type="button" role="menuitem" data-command="file.save"><span>Save Workspace…</span><kbd>Ctrl+S</kbd></button>
+              <div class="menu-separator" role="separator"></div>
+              <button id="loadAutosave" type="button" role="menuitem" data-command="file.autosave"><span>Load Autosave</span></button>
+            </div>
+          </div>
+          <div class="menu-root">
+            <button class="menu-button" type="button" data-menu-target="editMenu" aria-haspopup="menu" aria-expanded="false">Edit</button>
+            <div id="editMenu" class="app-menu" role="menu" hidden>
+              <button type="button" role="menuitem" data-command="edit.undo"><span>Undo</span><kbd>Ctrl+Z</kbd></button>
+              <button type="button" role="menuitem" data-command="edit.redo"><span>Redo</span><kbd>Ctrl+Shift+Z</kbd></button>
+            </div>
+          </div>
+          <div class="menu-root">
+            <button class="menu-button" type="button" data-menu-target="viewMenu" aria-haspopup="menu" aria-expanded="false">View</button>
+            <div id="viewMenu" class="app-menu" role="menu" hidden>
+              <button type="button" role="menuitemcheckbox" data-command="view.sidebar" data-panel-state="sidebar" aria-checked="true"><span>Primary Sidebar</span><kbd>Ctrl+B</kbd></button>
+              <button type="button" role="menuitemcheckbox" data-command="view.code" data-panel-state="code" aria-checked="true"><span>Code / Outline</span></button>
+              <button type="button" role="menuitemcheckbox" data-command="view.bottom" data-panel-state="bottom" aria-checked="false"><span>Bottom Tools</span><kbd>Ctrl+J</kbd></button>
+              <div class="menu-separator" role="separator"></div>
+              <button type="button" role="menuitem" data-command="view.problems"><span>Problems</span></button>
+              <button type="button" role="menuitem" data-command="view.output"><span>Output</span></button>
+              <button type="button" role="menuitem" data-command="view.fullscreen"><span>Full Screen</span><kbd>F11</kbd></button>
+            </div>
+          </div>
+          <div class="menu-root">
+            <button class="menu-button" type="button" data-menu-target="buildMenu" aria-haspopup="menu" aria-expanded="false">Build</button>
+            <div id="buildMenu" class="app-menu" role="menu" hidden>
+              <button type="button" role="menuitem" data-command="build.generate"><span>Synchronize Generated SML</span></button>
+              <button type="button" role="menuitem" data-command="build.export"><span>Export Workspace as PNG</span></button>
+            </div>
+          </div>
+          <div class="menu-root">
+            <button id="rendererMenuButton" class="menu-button" type="button" data-menu-target="toolsMenu" aria-haspopup="menu" aria-expanded="false">Tools</button>
+            <div id="toolsMenu" class="app-menu" role="menu" hidden>
+              <button type="button" role="menuitem" data-command="view.settings"><span>Settings</span></button>
+              <div class="menu-separator" role="separator"></div>
+              <button type="button" role="menuitemradio" aria-checked="true" data-renderer-id="MNRenderer"><span>Renderer: Macaca Nigra</span></button>
+              <button type="button" role="menuitemradio" aria-checked="false" data-renderer-id="GoropaRenderer"><span>Renderer: Goropa</span></button>
+              <div class="menu-separator" role="separator"></div>
+              <button type="button" role="menuitemradio" data-perspective="edit" data-command="perspective.edit" aria-checked="true"><span>Edit Perspective</span></button>
+              <button type="button" role="menuitemradio" data-perspective="presentation" data-command="perspective.presentation" aria-checked="false"><span>Presentation Perspective</span></button>
+            </div>
+          </div>
+          <div class="menu-root">
+            <button id="examplesMenuButton" class="menu-button" type="button" data-menu-target="examplesSubMenu" aria-haspopup="menu" aria-expanded="false">Examples</button>
+            <div id="examplesSubMenu" class="app-menu examples-app-menu" role="menu" hidden>
+              <button type="button" role="menuitem" data-sample-id="factorial"><span class="example-menu-title">Factorial</span></button>
+              <button type="button" role="menuitem" data-sample-id="caseMatch"><span class="example-menu-title">Case Match</span></button>
+              <button type="button" role="menuitem" data-sample-id="fCurrying"><span class="example-menu-title">Currying Function</span></button>
+              <button type="button" role="menuitem" data-sample-id="fUncurrying"><span class="example-menu-title">Uncurrying Function</span></button>
+              <button type="button" role="menuitem" data-sample-id="fPatterMatching"><span class="example-menu-title">Pattern Matching</span></button>
+              <button type="button" role="menuitem" data-sample-id="binaryTree"><span class="example-menu-title">Binary Tree</span></button>
+              <button type="button" role="menuitem" data-sample-id="signatureNStructure"><span class="example-menu-title">Signature and Structure</span></button>
+            </div>
+          </div>
+          <div class="menu-root">
+            <button class="menu-button" type="button" data-menu-target="helpMenu" aria-haspopup="menu" aria-expanded="false">Help</button>
+            <div id="helpMenu" class="app-menu" role="menu" hidden>
+              <button id="usageApp" type="button" role="menuitem" data-command="help.usage"><span>Usage Guide</span></button>
+              <button id="aboutApp" type="button" role="menuitem" data-command="help.about"><span>About Visual SML</span></button>
+            </div>
+          </div>
+        </nav>
+
+        <button id="commandPaletteTrigger" class="command-center" type="button" aria-haspopup="dialog" title="Open Command Palette (Ctrl+Shift+P)">
+          <span aria-hidden="true">⌕</span><span>Search commands</span><kbd>Ctrl+Shift+P</kbd>
+        </button>
+
+        <div class="title-context" aria-label="Current workspace">
+          <span id="titleFileLabel">untitled.vsml</span>
+          <span class="title-divider" aria-hidden="true">—</span>
+          <span>Visual SML</span>
+        </div>
+
+        <span id="saveStateLabel" class="save-state" title="Workspace save state">Saved</span>
+        <label class="theme-switch" for="themeToggle" title="Toggle light or dark theme">
+          <input id="themeToggle" type="checkbox" aria-label="Toggle dark theme" />
+          <span class="theme-slider" aria-hidden="true"><span>☀</span><span>☾</span></span>
+        </label>
+        <button id="menuToggle" class="menu-toggle icon-button" type="button" aria-controls="appMenu" aria-expanded="false">
+          <span aria-hidden="true">☰</span><span class="visually-hidden">Open application menu</span>
+        </button>
+        <input type="file" id="fileElem" accept=".vsml,.json,application/json" hidden />
+      </div>
+    </header>
+
+    <main class="ide-grid" id="divMainRow" data-ide-region="workbench" aria-label="Visual SML IDE">
+      <nav id="activityBar" class="activity-bar-region" data-ide-region="activity-bar" aria-label="Activity bar">
+        <div class="activity-primary">
+          <button class="activity-button active" type="button" data-activity="blocks" aria-label="Blocks" title="Blocks" aria-pressed="true">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z" /></svg>
+            <span class="activity-indicator"></span>
+          </button>
+          <button class="activity-button" type="button" data-activity="files" aria-label="Project files" title="Project files" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5h6l2 2h9v11h-17z" /></svg>
+            <span class="activity-indicator"></span>
+          </button>
+          <button class="activity-button" type="button" data-command="view.code" aria-label="Code and outline" title="Code and outline">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 7-5 5 5 5m8-10 5 5-5 5m-2-12-4 14" /></svg>
+          </button>
+          <button class="activity-button" type="button" data-command="view.problems" aria-label="Problems" title="Problems">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 20h18.4zm0 5v6m0 3v.2" /></svg>
+          </button>
+          <button class="activity-button" type="button" data-command="view.output" aria-label="Output" title="Output">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 7 4 5-4 5m6 0h8" /></svg>
+          </button>
+        </div>
+        <div class="activity-secondary">
+          <button class="activity-button" type="button" data-activity="settings" aria-label="Settings" title="Settings" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm0-5 1 2.1 2.3.5 1.8-1.4 2.2 2.2-1.4 1.8.5 2.3 2.1 1v3.1l-2.1 1-.5 2.3 1.4 1.8-2.2 2.2-1.8-1.4-2.3.5-1 2.1H10l-1-2.1-2.3-.5-1.8 1.4-2.2-2.2 1.4-1.8-.5-2.3-2.1-1V11l2.1-1 .5-2.3-1.4-1.8 2.2-2.2 1.8 1.4L9 5.6l1-2.1z" /></svg>
+            <span class="activity-indicator"></span>
+          </button>
+        </div>
+      </nav>
+
+      <aside id="toolboxPanel" class="toolbox-panel" data-ide-region="primary-sidebar" aria-label="Blockly toolbox">
+        <section class="sidebar-view" data-sidebar-view="blocks" aria-label="Blocks">
+          <div class="panel-header toolbox-header">
+            <span>Blocks</span>
+            <button id="toggleToolboxPanel" class="icon-button panel-hide-button" type="button" aria-label="Hide primary sidebar" title="Hide primary sidebar">‹</button>
+          </div>
+          <label class="toolbox-search" for="toolboxSearch">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input id="toolboxSearch" type="search" placeholder="Search blocks" aria-label="Search blocks" />
+            <kbd>Ctrl F</kbd>
+          </label>
+          <div class="custom-toolbox-list" id="htmlToolbox" aria-label="Block categories"></div>
+        </section>
+
+        <section class="sidebar-view" data-sidebar-view="files" aria-label="Project files" hidden>
+          <div class="panel-header">
+            <span>Project</span>
+            <button class="icon-button panel-hide-button" type="button" data-command="view.sidebar" aria-label="Hide primary sidebar" title="Hide primary sidebar">‹</button>
+          </div>
+          <div class="sidebar-section-heading">Workspace</div>
+          <button class="project-file active" type="button" data-command="view.blocks">
+            <span class="file-icon" aria-hidden="true">SML</span>
+            <span id="projectFileName">untitled.vsml</span>
+            <span class="file-state" title="Current workspace">●</span>
+          </button>
+          <div class="sidebar-action-list" aria-label="File commands">
+            <button type="button" data-command="file.new"><span aria-hidden="true">＋</span>New Workspace</button>
+            <button type="button" data-command="file.open"><span aria-hidden="true">↥</span>Open Workspace…</button>
+            <button type="button" data-command="file.save"><span aria-hidden="true">⌑</span>Save Workspace…</button>
+            <button type="button" data-command="file.autosave"><span aria-hidden="true">↶</span>Load Autosave</button>
+          </div>
+          <div class="side-empty-state">Visual SML currently works with one workspace file at a time.</div>
+        </section>
+
+        <section class="sidebar-view" data-sidebar-view="settings" aria-label="Settings" hidden>
+          <div class="panel-header">
+            <span>Settings</span>
+            <button class="icon-button panel-hide-button" type="button" data-command="view.sidebar" aria-label="Hide primary sidebar" title="Hide primary sidebar">‹</button>
+          </div>
+          <div class="settings-scroll">
+            <fieldset class="settings-group">
+              <legend>Color theme</legend>
+              <div class="segmented-control">
+                <button type="button" data-theme-choice="dark">Dark</button>
+                <button type="button" data-theme-choice="light">Light</button>
+              </div>
+            </fieldset>
+            <fieldset class="settings-group">
+              <legend>Block renderer</legend>
+              <button class="setting-option" type="button" data-renderer-choice="MNRenderer" role="radio" aria-checked="true">
+                <strong>Macaca Nigra</strong><span>ViSML grammar notches</span>
+              </button>
+              <button class="setting-option" type="button" data-renderer-choice="GoropaRenderer" role="radio" aria-checked="false">
+                <strong>Goropa</strong><span>Text-code appearance</span>
+              </button>
+            </fieldset>
+            <fieldset class="settings-group">
+              <legend>Autosave interval</legend>
+              <label class="autosave-control" for="autosaveInterval">
+                <input id="autosaveInterval" type="range" min="1" max="20" step="1" value="2" />
+                <span id="autosaveIntervalLabel" class="autosave-interval-label">2 min</span>
+              </label>
+            </fieldset>
+          </div>
+        </section>
+        <div id="sidebarResizeHandle" class="sidebar-resize-handle" role="separator" aria-label="Resize primary sidebar" aria-orientation="vertical" aria-valuemin="220" aria-valuemax="380" aria-valuenow="272" tabindex="0"></div>
+      </aside>
+
+      <section class="workspace-panel" data-ide-region="workspace" aria-label="Blockly workspace">
+        <div class="panel-header workspace-header">
+          <div class="workspace-header-left">
+            <button id="showToolboxFromWorkspace" class="icon-button workspace-restore-button restore-toolbox-button" type="button" hidden aria-label="Show blocks sidebar" title="Show blocks sidebar">
+              <span aria-hidden="true">›</span>
+            </button>
+            <span class="workspace-heading"><span class="workspace-kind" aria-hidden="true">◇</span><span id="workspaceTitle" class="workspace-title">Block Workspace</span></span>
+            <span id="workspaceFileLabel" class="workspace-file-label" title="Current workspace file">untitled.vsml</span>
+          </div>
+          <div class="workspace-controls" aria-label="Workspace controls">
+            <button id="workspaceUndo" class="icon-button" type="button" aria-label="Undo" title="Undo"><span aria-hidden="true">↶</span></button>
+            <button id="workspaceRedo" class="icon-button" type="button" aria-label="Redo" title="Redo"><span aria-hidden="true">↷</span></button>
+            <span class="control-separator" aria-hidden="true"></span>
+            <button id="workspaceZoomOut" class="icon-button" type="button" aria-label="Zoom out" title="Zoom out"><span aria-hidden="true">−</span></button>
+            <span id="zoomLabel" class="zoom-label" title="Blockly zoom level">100%</span>
+            <button id="workspaceZoomIn" class="icon-button" type="button" aria-label="Zoom in" title="Zoom in"><span aria-hidden="true">＋</span></button>
+            <button id="workspaceFit" class="icon-button" type="button" aria-label="Fit blocks in view" title="Fit blocks in view"><span aria-hidden="true">⌗</span></button>
+            <span class="control-separator" aria-hidden="true"></span>
+            <button id="workspaceToggleBottom" class="icon-button" type="button" aria-label="Toggle bottom tools" title="Toggle bottom tools"><span aria-hidden="true">▱</span></button>
+            <button id="workspaceFullscreen" class="icon-button" type="button" aria-label="Toggle full screen" title="Toggle full screen"><span aria-hidden="true">⛶</span></button>
+            <button id="showCodeFromWorkspace" class="icon-button workspace-restore-button restore-code-button" type="button" hidden aria-label="Show code and outline" title="Show code and outline">
+              <span aria-hidden="true">‹</span>
+            </button>
+          </div>
+        </div>
+        <div class="blockly-area" id="blocklyArea">
+          <div id="tarsiusWorkspaceDiv" class="blockly-canvas" aria-label="Blockly workspace canvas"></div>
+        </div>
+      </section>
+
+      <aside id="textBasedCodeDiv" class="code-panel" data-ide-region="secondary-sidebar" aria-label="SML code panel">
+        <div id="resizeHandle" class="resize-handle" role="separator" aria-label="Resize code and outline region" aria-orientation="vertical" aria-valuemin="320" aria-valuemax="720" aria-valuenow="430" tabindex="0"></div>
+        <div class="panel-header code-header">
+          <div id="rightPanelTabs" class="editor-tabs" role="tablist" aria-label="Code and outline views">
+            <button id="codeTab" class="editor-tab active" type="button" role="tab" data-right-tab="code" aria-controls="smlEditorPane" aria-selected="true">Code</button>
+            <button id="outlineTab" class="editor-tab" type="button" role="tab" data-right-tab="outline" aria-controls="outlinePane" aria-selected="false" tabindex="-1">Outline</button>
+          </div>
+          <div class="code-header-actions">
+            <div id="codeHeaderActions" class="code-context-actions">
+              <span class="language-badge">SML</span>
+              <button id="copyCode" class="icon-button" type="button" aria-label="Copy SML code" title="Copy SML code">⧉</button>
+              <button type="button" class="icon-button" data-command="build.generate" aria-label="Synchronize code from blocks" title="Synchronize code from blocks">↻</button>
+            </div>
+            <button id="maximizeRightPanel" type="button" class="icon-button" aria-label="Maximize code and outline region" title="Maximize code and outline region">□</button>
+            <button id="toggleCodePanel" class="icon-button panel-hide-button" type="button" aria-label="Hide code and outline" title="Hide code and outline">›</button>
+          </div>
+        </div>
+        <div id="smlEditorPane" class="code-pane code-editor-pane active" data-right-pane="code" role="tabpanel" aria-labelledby="codeTab">
+          <div class="code-editor-wrap">
+            <div class="line-number-gutter" aria-hidden="true"><pre id="smlEditorLineNumbers">1</pre></div>
+            <div class="code-editor-layer">
+              <pre id="smlEditorHighlight" class="code-editor-highlight" aria-hidden="true"></pre>
+              <textarea id="smlSourceArea" class="code-editor language-sml" aria-label="Editable Standard ML source" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+            </div>
+          </div>
+          <div class="code-editor-actions">
+            <span id="smlConvertStatus" class="code-editor-status">Edit the SML code; blocks update as you type.</span>
+            <button id="convertSmlToBlocks" class="small-button primary-button" type="button">Apply to Blocks</button>
+          </div>
+        </div>
+        <div id="outlinePane" class="code-pane outline-pane" data-right-pane="outline" role="tabpanel" aria-labelledby="outlineTab" hidden>
+          <div class="outline-toolbar">
+            <span>Program structure</span>
+            <button class="icon-button" type="button" data-command="workspace.center" aria-label="Center workspace" title="Center workspace">⌾</button>
+          </div>
+          <div id="programOutline" class="program-outline" role="tree" aria-label="Program block outline"></div>
+        </div>
+      </aside>
+    </main>
+
+    <section id="bottomTools" class="bottom-tools-region" data-ide-region="bottom-tools" aria-label="Bottom tools" hidden>
+      <div id="bottomResizeHandle" class="bottom-resize-handle" role="separator" aria-label="Resize bottom tools" aria-orientation="horizontal" aria-valuemin="160" aria-valuemax="520" aria-valuenow="260" tabindex="0"></div>
+      <div class="bottom-panel-header">
+        <div id="bottomToolTabs" class="bottom-tabs" role="tablist" aria-label="Bottom tool views">
+          <button id="problemsTab" class="bottom-tab active" type="button" role="tab" data-bottom-tab="problems" aria-controls="problemsPane" aria-selected="true">Problems <span id="problemsCount" class="tab-count">0</span></button>
+          <button id="outputTab" class="bottom-tab" type="button" role="tab" data-bottom-tab="output" aria-controls="outputPane" aria-selected="false" tabindex="-1">Output</button>
+        </div>
+        <div class="bottom-header-actions">
+          <button id="maximizeBottomPanel" class="icon-button" type="button" aria-label="Maximize bottom panel" title="Maximize bottom panel">⌃</button>
+          <button id="closeBottomPanel" class="icon-button" type="button" aria-label="Close bottom panel" title="Close bottom panel">×</button>
+        </div>
+      </div>
+      <div class="bottom-panel-content">
+        <section id="problemsPane" class="bottom-pane" data-bottom-pane="problems" role="tabpanel" aria-labelledby="problemsTab">
+          <div id="problemsList" class="problems-list"></div>
+        </section>
+        <section id="outputPane" class="bottom-pane" data-bottom-pane="output" role="tabpanel" aria-labelledby="outputTab" hidden>
+          <div class="output-toolbar"><span>Workbench events</span><span>Current session</span></div>
+          <div id="outputLog" class="output-log" role="log" aria-live="polite"></div>
+        </section>
+      </div>
+    </section>
+
+    <footer class="statusbar" data-ide-region="status-bar" aria-label="IDE status">
+      <button class="status-item status-problems" type="button" data-command="view.problems" title="Show Problems"><span aria-hidden="true">×</span><span id="statusProblemsCount">0</span></button>
+      <span class="status-item"><span class="status-dot" aria-hidden="true"></span>Ready</span>
+      <span id="statusLine" class="status-item status-line" role="status" aria-live="polite">Visual SML workspace ready.</span>
+      <span class="status-spacer"></span>
+      <span class="status-item" title="Current renderer"><span aria-hidden="true">◇</span><span id="statusRenderer">Macaca Nigra</span></span>
+      <span class="status-item">Blocks <strong id="blockCount">0</strong></span>
+      <span class="status-item">SML</span>
+      <button class="status-item status-version" type="button" data-command="help.about" title="About Visual SML">ViSML 5.0.0</button>
+    </footer>
+  </div>
+
+  <div id="commandPalette" class="command-palette-backdrop" role="presentation" hidden>
+    <div class="command-palette" role="dialog" aria-modal="true" aria-labelledby="commandPaletteLabel">
+      <label id="commandPaletteLabel" class="command-palette-input" for="commandPaletteInput">
+        <span aria-hidden="true">›</span>
+        <input id="commandPaletteInput" type="search" role="combobox" aria-controls="commandPaletteResults" aria-expanded="true" autocomplete="off" placeholder="Type a command" />
+      </label>
+      <div id="commandPaletteResults" class="command-results" role="listbox"></div>
+      <div class="command-palette-footer"><span><kbd>↑</kbd><kbd>↓</kbd> navigate</span><span><kbd>Enter</kbd> run</span><span><kbd>Esc</kbd> close</span></div>
+    </div>
+  </div>
+
+  <div class="modal fade app-modal" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <img src="./images/logo_small.png" alt="" style="width: 52px; height: 52px; object-fit: contain;" />
+          <div>
+            <h5 class="modal-title" id="aboutModalLabel">Visual SML (ViSML)</h5>
+            <p class="mb-0">A block-based Standard ML environment.</p>
+          </div>
+          <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Visual SML is a Blockly-based IDE for composing SML programs visually and generating textual Standard ML code.</p>
+          <dl class="mb-0">
+            <dt>Version</dt>
+            <dd>5.0.0</dd>
+            <dt>Technology</dt>
+            <dd>TypeScript, webpack, Blockly 12</dd>
+            <dt>Copyright</dt>
+            <dd>&copy;2022-2026</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade app-modal" id="usageModal" tabindex="-1" aria-labelledby="usageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="usageModalLabel">Usage</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <ol>
+            <li>Click or drag a block from the left toolbox into the workspace.</li>
+            <li>Connect blocks with matching connector shapes to build SML declarations and expressions.</li>
+            <li>Use the generated code panel to inspect or copy the Standard ML output.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var THEME_STORAGE_KEY = "visual-sml-theme-mode";
+      var root = document.documentElement;
+      var app = document.getElementById("app");
+      var menuToggle = document.getElementById("menuToggle");
+      var themeToggle = document.getElementById("themeToggle");
+      var examplesButton = document.getElementById("examplesMenuButton");
+      var examplesSubMenu = document.getElementById("examplesSubMenu");
+      var rendererButton = document.getElementById("rendererMenuButton");
+      var rendererSubMenu = document.getElementById("toolsMenu");
+      var resizeHandle = document.getElementById("resizeHandle");
+      var codePanel = document.getElementById("textBasedCodeDiv");
+      var smlSourceArea = document.getElementById("smlSourceArea");
+      var smlConvertStatus = document.getElementById("smlConvertStatus");
+      var autosaveInterval = document.getElementById("autosaveInterval");
+      var autosaveIntervalLabel = document.getElementById("autosaveIntervalLabel");
+
+      function getWorkspace() {
+        return window.tarsius && window.tarsius.tarsiusWorkspace;
+      }
+
+      function closestFromEvent(event, selector) {
+        var target = event.target;
+        if (!target) return null;
+        if (target.nodeType !== 1) target = target.parentElement;
+        return target && target.closest ? target.closest(selector) : null;
+      }
+
+      function updateViewportHeight() {
+        var height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        root.style.setProperty("--viewport-height", height + "px");
+      }
+
+      function updateStatus(message) {
+        var workspace = getWorkspace();
+        var statusLine = document.getElementById("statusLine");
+        var blockCount = document.getElementById("blockCount");
+        var zoomLabel = document.getElementById("zoomLabel");
+        if (message && statusLine) statusLine.textContent = message;
+        if (workspace && blockCount) blockCount.textContent = String(workspace.getAllBlocks(false).length);
+        if (workspace && zoomLabel) {
+          var zoom = Math.round((workspace.scale || 1) * 100);
+          zoomLabel.textContent = zoom + "%";
+          zoomLabel.title = "Blockly zoom level: " + zoom + "%";
+        }
+      }
+
+      function updateAutosaveIntervalControl(minutes) {
+        var value = Number(minutes) || 2;
+        if (autosaveInterval) autosaveInterval.value = String(value);
+        if (autosaveIntervalLabel) autosaveIntervalLabel.textContent = value + " min";
+      }
+
+      function requestLayoutUpdate(message) {
+        updateViewportHeight();
+        if (window.tarsius && typeof window.tarsius.requestLayoutUpdate === "function") {
+          window.tarsius.requestLayoutUpdate(message);
+          return;
+        }
+        window.dispatchEvent(new CustomEvent("visual-sml:layout-request", {
+          detail: { message: message }
+        }));
+        updateStatus(message);
+      }
+
+      function setShellTheme(mode) {
+        root.dataset.theme = mode;
+        app.dataset.theme = mode;
+        if (themeToggle) {
+          themeToggle.checked = mode === "dark";
+          themeToggle.setAttribute("aria-label", mode === "dark" ? "Switch to light theme" : "Switch to dark theme");
+        }
+        document.querySelectorAll("[data-theme-choice]").forEach(function (button) {
+          button.setAttribute("aria-pressed", String(button.getAttribute("data-theme-choice") === mode));
+        });
+        var metaThemeColor = document.querySelector('meta[name="theme-color"]');
+        if (metaThemeColor) metaThemeColor.content = mode === "dark" ? "#111318" : "#f2f4f7";
+      }
+
+      function applyBlocklyTheme(mode) {
+        if (!window.tarsius) return;
+        if (mode === "dark" && window.tarsius.setThemestarsius) window.tarsius.setThemestarsius();
+        if (mode === "light" && window.tarsius.setThemesBnW) window.tarsius.setThemesBnW();
+      }
+
+      function closeExamplesMenu() {
+        if (!examplesButton || !examplesSubMenu) return;
+        examplesSubMenu.hidden = true;
+        examplesButton.setAttribute("aria-expanded", "false");
+      }
+
+      function closeRendererMenu() {
+        if (!rendererButton || !rendererSubMenu) return;
+        rendererSubMenu.hidden = true;
+        rendererButton.setAttribute("aria-expanded", "false");
+      }
+
+      function refreshRendererMenuSelection() {
+        if (!rendererSubMenu) return;
+        var current = window.tarsius && window.tarsius.getRendererName
+          ? window.tarsius.getRendererName()
+          : "MNRenderer";
+        rendererSubMenu.querySelectorAll("[data-renderer-id]").forEach(function (item) {
+          item.setAttribute("aria-checked", String(item.getAttribute("data-renderer-id") === current));
+        });
+      }
+
+      function closeTopbarMenu() {
+        if (!app || !menuToggle) return;
+        app.classList.remove("menu-open");
+        menuToggle.setAttribute("aria-expanded", "false");
+        menuToggle.innerHTML = '<span aria-hidden="true">☰</span><span class="visually-hidden">Open application menu</span>';
+      }
+
+      function renderToolboxToggleState() {
+        var hidden = app.classList.contains("toolbox-hidden");
+        var hideButton = document.getElementById("toggleToolboxPanel");
+        var restoreButton = document.getElementById("showToolboxFromWorkspace");
+        if (hideButton) {
+          hideButton.textContent = "‹";
+          hideButton.setAttribute("aria-expanded", String(!hidden));
+          hideButton.setAttribute("aria-label", "Hide toolbox");
+          hideButton.title = "Hide toolbox";
+        }
+        if (restoreButton) {
+          restoreButton.hidden = !hidden;
+          restoreButton.setAttribute("aria-expanded", String(!hidden));
+        }
+      }
+
+      function renderCodeToggleState() {
+        var hidden = app.classList.contains("code-hidden");
+        var hideButton = document.getElementById("toggleCodePanel");
+        var restoreButton = document.getElementById("showCodeFromWorkspace");
+        if (hideButton) {
+          hideButton.textContent = "›";
+          hideButton.setAttribute("aria-expanded", String(!hidden));
+          hideButton.setAttribute("aria-label", "Hide generated code");
+          hideButton.title = "Hide generated code";
+        }
+        if (restoreButton) {
+          restoreButton.hidden = !hidden;
+          restoreButton.setAttribute("aria-expanded", String(!hidden));
+          restoreButton.disabled = !hidden;
+        }
+      }
+
+      window.setDarkTheme = function () {
+        setShellTheme("dark");
+        window.localStorage.setItem(THEME_STORAGE_KEY, "dark");
+        applyBlocklyTheme("dark");
+        closeExamplesMenu();
+        requestLayoutUpdate("Night theme enabled.");
+      };
+
+      window.setLightTheme = function () {
+        setShellTheme("light");
+        window.localStorage.setItem(THEME_STORAGE_KEY, "light");
+        applyBlocklyTheme("light");
+        closeExamplesMenu();
+        requestLayoutUpdate("Light theme enabled.");
+      };
+
+      window.toggleCode = function () {
+        app.classList.toggle("code-hidden");
+        renderCodeToggleState();
+        requestLayoutUpdate(app.classList.contains("code-hidden") ? "Generated code panel hidden." : "Generated code panel shown.");
+      };
+
+      window.toggleToolbox = function () {
+        app.classList.toggle("toolbox-hidden");
+        renderToolboxToggleState();
+        requestLayoutUpdate(app.classList.contains("toolbox-hidden") ? "Toolbox hidden." : "Toolbox shown.");
+      };
+
+      window.refreshCode = function () {
+        if (window.tarsius && window.tarsius.refreshGeneratedCode) {
+          window.tarsius.refreshGeneratedCode();
+        } else {
+          updateStatus("Generated code refreshed.");
+        }
+        requestLayoutUpdate("Generated code refreshed.");
+      };
+
+      window.clearWorkspace = function () {
+        if (!window.confirm("Clear the workspace and start a new Visual SML file?")) return;
+        window.location.reload();
+      };
+
+      window.copyCode = function () {
+        var text = smlSourceArea ? smlSourceArea.value : "";
+        var button = document.getElementById("copyCode");
+        var done = function (ok) {
+          if (!button) return;
+          button.textContent = ok ? "✓" : "!";
+          window.setTimeout(function () { button.textContent = "⧉"; }, 1200);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () {
+            updateStatus("Generated SML copied to clipboard.");
+            done(true);
+          }, function () { done(false); });
+        } else {
+          done(false);
+        }
+      };
+
+      window.convertSmlToBlocks = function () {
+        if (!window.tarsius || !window.tarsius.applySmlEditorNow) {
+          if (smlConvertStatus) smlConvertStatus.textContent = "ViSML converter is not ready yet.";
+          updateStatus("ViSML converter is not ready yet.");
+          return;
+        }
+        if (window.tarsius.applySmlEditorNow()) {
+          requestLayoutUpdate("SML converted to ViSML blocks.");
+        }
+      };
+
+      window.showAbout = function () {
+        if (window.assets && window.assets.Modal) {
+          new window.assets.Modal(document.getElementById("aboutModal")).show();
+        }
+      };
+
+      window.showUsage = function () {
+        if (window.assets && window.assets.usage) {
+          window.assets.usage();
+        }
+      };
+
+      menuToggle && menuToggle.addEventListener("click", function () {
+        app.classList.toggle("menu-open");
+        var isOpen = app.classList.contains("menu-open");
+        menuToggle.setAttribute("aria-expanded", String(isOpen));
+        menuToggle.innerHTML = isOpen
+          ? '<span aria-hidden="true">×</span><span class="visually-hidden">Close application menu</span>'
+          : '<span aria-hidden="true">☰</span><span class="visually-hidden">Open application menu</span>';
+        requestLayoutUpdate();
+      });
+
+      rendererButton && rendererButton.addEventListener("click", refreshRendererMenuSelection);
+
+      rendererSubMenu && rendererSubMenu.addEventListener("click", function (event) {
+        var item = closestFromEvent(event, "[data-renderer-id]");
+        if (!item || !window.tarsius || !window.tarsius.setRenderer) return;
+        closeRendererMenu();
+        closeTopbarMenu();
+        updateStatus("Switching " + item.textContent.trim() + "...");
+        window.tarsius.setRenderer(item.getAttribute("data-renderer-id"));
+      });
+
+      examplesSubMenu && examplesSubMenu.addEventListener("click", function (event) {
+        var item = closestFromEvent(event, "[data-sample-id]");
+        if (!item || !window.tarsius || !window.tarsius.sampleLoader) return;
+        window.tarsius.sampleLoader(item.getAttribute("data-sample-id"));
+        closeExamplesMenu();
+        closeTopbarMenu();
+        window.setTimeout(function () {
+          window.refreshCode();
+          updateStatus("Loaded example: " + item.querySelector(".example-menu-title").textContent + ".");
+        }, 0);
+      });
+
+      document.addEventListener("click", function (event) {
+        var wrapper = closestFromEvent(event, ".example-menu-wrapper");
+        if (!wrapper || !wrapper.contains(examplesSubMenu)) closeExamplesMenu();
+        if (!wrapper || !wrapper.contains(rendererSubMenu)) closeRendererMenu();
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          closeExamplesMenu();
+          closeRendererMenu();
+          closeTopbarMenu();
+        }
+      });
+
+      autosaveInterval && autosaveInterval.addEventListener("input", function (event) {
+        var value = Number(event.target.value);
+        if (window.tarsius && window.tarsius.setAutosaveIntervalMinutes) {
+          value = window.tarsius.setAutosaveIntervalMinutes(value);
+        }
+        updateAutosaveIntervalControl(value);
+      });
+      document.getElementById("copyCode").addEventListener("click", window.copyCode);
+      document.getElementById("convertSmlToBlocks").addEventListener("click", window.convertSmlToBlocks);
+      document.getElementById("toggleToolboxPanel").addEventListener("click", window.toggleToolbox);
+      document.getElementById("showToolboxFromWorkspace").addEventListener("click", window.toggleToolbox);
+      document.getElementById("toggleCodePanel").addEventListener("click", window.toggleCode);
+      document.getElementById("showCodeFromWorkspace").addEventListener("click", window.toggleCode);
+
+      themeToggle && themeToggle.addEventListener("change", function () {
+        if (themeToggle.checked) window.setDarkTheme();
+        else window.setLightTheme();
+      });
+
+      document.getElementById("toolboxSearch").addEventListener("input", function (event) {
+        var query = event.target.value.trim().toLowerCase();
+        document.querySelectorAll("#htmlToolbox .toolbox-block").forEach(function (block) {
+          var text = block.textContent.toLowerCase();
+          block.hidden = query.length > 0 && text.indexOf(query) === -1;
+        });
+        document.querySelectorAll("#htmlToolbox .toolbox-category").forEach(function (category) {
+          var visibleBlocks = category.querySelectorAll(".toolbox-block:not([hidden])");
+          category.hidden = query.length > 0 && visibleBlocks.length === 0;
+          if (query.length > 0 && visibleBlocks.length > 0) category.open = true;
+        });
+      });
+
+      if (resizeHandle && codePanel) {
+        var dragging = false;
+        resizeHandle.addEventListener("pointerdown", function (event) {
+          dragging = true;
+          resizeHandle.setPointerCapture(event.pointerId);
+          document.body.classList.add("resizing-code-panel");
+          event.preventDefault();
+        });
+        window.addEventListener("pointermove", function (event) {
+          if (!dragging) return;
+          var nextWidth = Math.min(Math.max(window.innerWidth - event.clientX, 320), 720);
+          root.style.setProperty("--ide-code-panel-width", nextWidth + "px");
+          root.style.setProperty("--code-panel-width", nextWidth + "px");
+          requestLayoutUpdate();
+        });
+        window.addEventListener("pointerup", function () {
+          if (!dragging) return;
+          dragging = false;
+          document.body.classList.remove("resizing-code-panel");
+          requestLayoutUpdate();
+        });
+      }
+
+      window.visualSmlUpdateStatus = updateStatus;
+      window.visualSmlRequestLayout = requestLayoutUpdate;
+
+      var savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+      setShellTheme(savedTheme === "light" ? "light" : "dark");
+      renderToolboxToggleState();
+      renderCodeToggleState();
+      updateViewportHeight();
+
+      window.addEventListener("load", function () {
+        applyBlocklyTheme(root.dataset.theme);
+        if (window.tarsius && window.tarsius.getAutosaveIntervalMinutes) {
+          updateAutosaveIntervalControl(window.tarsius.getAutosaveIntervalMinutes());
+        }
+        requestLayoutUpdate("Visual SML workspace ready.");
+      });
+    })();
+  </script>
+
+  <script src="./assets.js"></script>
+  <script src="./tarsius.js"></script>
+</body>
+
+</html>
